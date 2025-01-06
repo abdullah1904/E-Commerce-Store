@@ -34,3 +34,17 @@ export const getProductData = async () => {
     inActiveCount,
   }
 }
+
+export const getProducts = async () => {
+  return await db.product.findMany({
+    select: {
+      id: true,
+      name: true,
+      priceInCents: true,
+      isAvailableForPurchase: true,
+      filePath: true,
+      _count: { select: { orders: true } }
+    },
+    orderBy: {name: "asc"}
+  })
+}
