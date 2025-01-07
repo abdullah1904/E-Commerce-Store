@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidPassword } from "./utils/isValidPassword";
 
-cinst
 
 const isAuthenticated = async (req: NextRequest) => {
     const authHeader = req.headers.get("Authorization");
@@ -8,7 +8,8 @@ const isAuthenticated = async (req: NextRequest) => {
         return false;
     }
     const [username, password] = Buffer.from(authHeader.split(" ")[1], "base64").toString().split(":");
-    return username === process.env.ADMIN_USERNAME && password === await isValidPassword(password, process.env.HASHED_ADMIN_PASSWORD as string);
+    const isPasswordValid = await isValidPassword(password, process.env.HASHED_ADMIN_PASSWORD as string);
+    return username === process.env.ADMIN_USERNAME && isPasswordValid;
 }   
 
 export const middleware = async (req: NextRequest) => {
