@@ -63,7 +63,14 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
       <div className="space-y-2">
         <Label htmlFor="image">Image</Label>
         <Input type="file" id="image" name="image" required={product == null} />
-        {product != null && <Image src={product?.imagePath} height="400" width="400" alt={product.name} />}
+        {product != null && (
+          <Image
+            src={product.imagePath}
+            height="400"
+            width="400"
+            alt="Product Image"
+          />
+        )}
         {error.image && <div className="text-destructive">{error.image}</div>}
       </div>
       <SubmitButton />

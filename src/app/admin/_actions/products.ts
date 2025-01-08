@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { z } from "zod";
 import fs from "fs/promises";
 import { notFound, redirect } from "next/navigation";
-import path from 'path';
 import crypto from 'crypto';
 
 const fileSchema = z.instanceof(File, { message: "Required" });
@@ -24,15 +23,13 @@ export const addProduct = async (prevState: unknown, formData: FormData) => {
     }
     const data = result.data;
 
-    const productsDir = path.resolve('products');
-    await fs.mkdir(productsDir, { recursive: true });
-    const filePath = path.join(productsDir, `${crypto.randomUUID()}-${data.file.name}`);
-    await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()));
+    await fs.mkdir("products", { recursive: true })
+    const filePath = `products/${crypto.randomUUID()}-${data.file.name}`
+    await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()))
 
-    const publicProductsDir = path.resolve('public', 'products');
-    await fs.mkdir(publicProductsDir, { recursive: true });
-    const imagePath = path.join('/products', `${crypto.randomUUID()}-${data.image.name}`);
-    await fs.writeFile(path.join(publicProductsDir, imagePath), Buffer.from(await data.image.arrayBuffer()));
+    await fs.mkdir("public/products", { recursive: true })
+    const imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`
+    await fs.writeFile(`public${imagePath}`, Buffer.from(await data.image.arrayBuffer()))
 
     await db.product.create({
         data: {
@@ -64,33 +61,33 @@ const editSchema = addSchema.extend({
     image: imageSchema.optional(),
 })
 
-export const updateProduct = async (id:string, prevState: unknown, formData: FormData) => {
+export const updateProduct = async (id: string, prevState: unknown, formData: FormData) => {
     const result = editSchema.safeParse(Object.fromEntries(formData.entries()))
     if (!result.success) {
         return result.error.formErrors.fieldErrors;
     }
     const data = result.data;
-    const product = await db.product.findUnique({where: {id}})
+    const product = await db.product.findUnique({ where: { id } })
 
-    if(product == null){
+    if (product == null) {
         return notFound();
     }
-    let filePath = product.filePath;;
-    if(data.file != null && data.file.size > 0 ){
-        await fs.unlink(product.filePath);
-        filePath = `products/${crypto.randomUUID()}-${data.file.name}`;
-        await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()));
+    let filePath = product.filePath
+    if (data.file != null && data.file.size > 0) {
+        await fs.unlink(product.filePath)
+        filePath = `products/${crypto.randomUUID()}-${data.file.name}`
+        await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()))
     }
 
-    let imagePath = product.imagePath;
-    if(data.image != null && data.image.size > 0 ){
-        await fs.unlink(`public${product.imagePath}`);
-        imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`;
-        await fs.writeFile(`public${imagePath}`, Buffer.from(await data.image.arrayBuffer()));
+    let imagePath = product.imagePath
+    if (data.image != null && data.image.size > 0) {
+        await fs.unlink(`public${product.imagePath}`)
+        imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`
+        await fs.writeFile(`public${imagePath}`, Buffer.from(await data.image.arrayBuffer()))
     }
 
     await db.product.update({
-        where: {id},
+        where: { id },
         data: {
             name: data.name,
             priceInCents: data.priceInCents,
