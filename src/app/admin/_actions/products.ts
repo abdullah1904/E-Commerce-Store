@@ -4,6 +4,7 @@ import { z } from "zod";
 import fs from "fs/promises";
 import { notFound, redirect } from "next/navigation";
 import path from 'path';
+import crypto from 'crypto';
 
 const fileSchema = z.instanceof(File, { message: "Required" });
 const imageSchema = fileSchema.refine(file => file.size === 0 || file.type.startsWith("image/"))
@@ -17,21 +18,21 @@ const addSchema = z.object({
 })
 
 export const addProduct = async (prevState: unknown, formData: FormData) => {
-    const result = addSchema.safeParse(Object.fromEntries(formData.entries()))
+    const result = addSchema.safeParse(Object.fromEntries(formData.entries()));
     if (!result.success) {
         return result.error.formErrors.fieldErrors;
     }
     const data = result.data;
 
-    const productsDir = path.join(process.cwd(), 'products');
+    const productsDir = path.resolve('products');
     await fs.mkdir(productsDir, { recursive: true });
     const filePath = path.join(productsDir, `${crypto.randomUUID()}-${data.file.name}`);
     await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()));
 
-    const publicProductsDir = path.join(process.cwd(), 'public', 'products');
+    const publicProductsDir = path.resolve('public', 'products');
     await fs.mkdir(publicProductsDir, { recursive: true });
     const imagePath = path.join('/products', `${crypto.randomUUID()}-${data.image.name}`);
-    await fs.writeFile(path.join(process.cwd(), 'public', imagePath), Buffer.from(await data.image.arrayBuffer()));
+    await fs.writeFile(path.join(publicProductsDir, imagePath), Buffer.from(await data.image.arrayBuffer()));
 
     await db.product.create({
         data: {
