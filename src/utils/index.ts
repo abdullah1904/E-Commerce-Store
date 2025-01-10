@@ -1,4 +1,5 @@
 import { db } from "@/db"
+import { cache } from "./cache";
 
 export const getSalesData = async () => {
   const data = await db.order.aggregate({
@@ -45,6 +46,49 @@ export const getProducts = async () => {
       filePath: true,
       _count: { select: { orders: true } }
     },
-    orderBy: {name: "asc"}
+    orderBy: { name: "asc" }
   })
+}
+
+export const getMostPopularProducts = cache(() => {
+  return db.product.findMany({
+    where: {
+      isAvailableForPurchase: true
+    },
+    orderBy: {
+      orders: {
+        _count: "desc"
+      }
+    },
+    take: 6
+  });
+}, ['/', "getMostPopularProducts"], { revalidate: 60 * 60 * 24 });
+
+export const getNewestProducts = cache(() => {
+  return db.product.findMany({
+    where: {
+      isAvailableForPurchase: true
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    take: 6
+  });
+}, ['/', "getNewestProducts"]);
+
+export const getProductsForUser = cache(() => {
+  return db.product.findMany({
+    where: {
+      isAvailableForPurchase: true
+    },
+    orderBy: {
+      name: "asc"
+    }
+  });
+},['/products', "getProductsForUser"]);
+
+export const getProduct = async (id: string) => {
+  return await db.product.findUnique({
+    where: { id }
+  });
 }

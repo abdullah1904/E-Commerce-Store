@@ -4,6 +4,7 @@ import { z } from "zod";
 import fs from "fs/promises";
 import { notFound, redirect } from "next/navigation";
 import crypto from 'crypto';
+import { revalidatePath } from "next/cache";
 
 const fileSchema = z.instanceof(File, { message: "Required" });
 const imageSchema = fileSchema.refine(file => file.size === 0 || file.type.startsWith("image/"))
@@ -41,11 +42,15 @@ export const addProduct = async (prevState: unknown, formData: FormData) => {
             isAvailableForPurchase: false
         }
     });
+    revalidatePath("/");
+    revalidatePath("/products");
     redirect("/admin/products");
 }
 
 export const toggleProductAvailability = async (id: string, isAvailableForPurchase: boolean) => {
     await db.product.update({ where: { id }, data: { isAvailableForPurchase } });
+    revalidatePath("/");
+    revalidatePath("/products");
 }
 
 export const deleteProduct = async (id: string) => {
@@ -53,7 +58,9 @@ export const deleteProduct = async (id: string) => {
     if (product == null) {
         return notFound();
     }
-    await Promise.all([fs.unlink(product.filePath), fs.unlink(`public${product.imagePath}`)])
+    await Promise.all([fs.unlink(product.filePath), fs.unlink(`public${product.imagePath}`)]);
+    revalidatePath("/");
+    revalidatePath("/products");
 }
 
 const editSchema = addSchema.extend({
@@ -96,5 +103,7 @@ export const updateProduct = async (id: string, prevState: unknown, formData: Fo
             imagePath: imagePath,
         }
     });
+    revalidatePath("/");
+    revalidatePath("/products");
     redirect("/admin/products");
 }
