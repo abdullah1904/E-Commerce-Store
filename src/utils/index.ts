@@ -92,3 +92,4 @@ export const getProduct = async (id: string) => {
     where: { id }
   });
 }
+
