@@ -85,7 +85,7 @@ export const getProductsForUser = cache(() => {
       name: "asc"
     }
   });
-},['/products', "getProductsForUser"]);
+}, ['/products', "getProductsForUser"]);
 
 export const getProduct = async (id: string) => {
   return await db.product.findUnique({
@@ -93,3 +93,25 @@ export const getProduct = async (id: string) => {
   });
 }
 
+export const getUsers = async () => {
+  return await db.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      orders: { select: { pricePaidInCents: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export const getOrders = () => {
+  return db.order.findMany({
+    select: {
+      id: true,
+      pricePaidInCents: true,
+      product: { select: { name: true } },
+      user: { select: { email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}

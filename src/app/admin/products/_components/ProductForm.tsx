@@ -21,13 +21,25 @@ const SubmitButton = () => {
 };
 
 const ProductForm = ({ product }: { product?: Product | null }) => {
-  const [priceInCents, setPriceInCents] = useState<number | undefined>(product?.priceInCents);
-  const [error, action] = useActionState(product == null ? addProduct : updateProduct.bind(null, product.id), {});
+  const [priceInCents, setPriceInCents] = useState<string>(
+    product?.priceInCents?.toString() || ""
+  );
+  const [error, action] = useActionState(
+    product == null ? addProduct : updateProduct.bind(null, product.id),
+    {}
+  );
+
   return (
     <form className="space-y-8" action={action}>
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
-        <Input type="text" id="name" name="name" required defaultValue={product?.name || ""} />
+        <Input
+          type="text"
+          id="name"
+          name="name"
+          required
+          defaultValue={product?.name || ""}
+        />
         {error.name && <div className="text-destructive">{error.name}</div>}
       </div>
       <div className="space-y-2">
@@ -38,10 +50,10 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
           name="priceInCents"
           required
           value={priceInCents}
-          onChange={e => setPriceInCents(Number(e.target.value) || undefined)}
+          onChange={(e) => setPriceInCents(e.target.value)}
         />
         <div className="text-muted-foreground">
-          {formatCurrency((priceInCents || 0) / 100)}
+          {formatCurrency(Number(priceInCents || 0) / 100)}
         </div>
         {error.priceInCents && (
           <div className="text-destructive">{error.priceInCents}</div>
@@ -49,7 +61,12 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea id="description" name="description" required defaultValue={product?.description || ""} />
+        <Textarea
+          id="description"
+          name="description"
+          required
+          defaultValue={product?.description || ""}
+        />
         {error.description && (
           <div className="text-destructive">{error.description}</div>
         )}
@@ -57,7 +74,9 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
       <div className="space-y-2">
         <Label htmlFor="file">File</Label>
         <Input type="file" id="file" name="file" required={product == null} />
-        {product != null && <div className="text-muted-foreground">{product?.filePath}</div>}
+        {product != null && (
+          <div className="text-muted-foreground">{product?.filePath}</div>
+        )}
         {error.file && <div className="text-destructive">{error.file}</div>}
       </div>
       <div className="space-y-2">
