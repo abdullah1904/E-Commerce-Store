@@ -12,4 +12,10 @@ const NUMBER_FORMAT = new Intl.NumberFormat('en-US')
 
 export const formatNumber = (number: number) => {
     return NUMBER_FORMAT.format(number)
-} 
+}
+
+export const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" })
+
+export const formatDateTime = (date:Date)=>{
+    return dateFormatter.format(date)
+}

@@ -1,7 +1,9 @@
+import React from "react";
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { Resend } from "resend"
 import { db } from "@/db"
+import PurchaseReceiptEmail from "@/email/PurchaseReceipt"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const resend = new Resend(process.env.RESEND_API_KEY!)
@@ -28,14 +30,14 @@ export async function POST(req: NextRequest) {
             email,
             orders: { create: { productId, pricePaidInCents } },
         }
-        await db.user.upsert({
+        const { orders: [order] } = await db.user.upsert({
             where: { email },
             create: userFields,
             update: userFields,
             select: { orders: { orderBy: { createdAt: "desc" }, take: 1 } },
         })
 
-        await db.downloadVerification.create({
+        const downloadVerification = await db.downloadVerification.create({
             data: {
                 productId,
                 expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
             from: `Support <${process.env.SENDER_EMAIL}>`,
             to: email,
             subject: "Order Confirmation",
-            react: "<h2>Thank you for your purchase!</h2>"
+            react: React.createElement(PurchaseReceiptEmail, { order, product, downloadVerificationId: downloadVerification.id })
         })
     }
 
